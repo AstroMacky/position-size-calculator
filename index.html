@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Position Size Calculator</title>
+
+  <!-- iPhone Home Screen icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-v2.PNG" />
+  <!-- Fallback icons -->
+  <link rel="icon" type="image/png" href="apple-touch-icon-v2.PNG" />
+  <link rel="shortcut icon" href="apple-touch-icon-v2.PNG" />
+
+  <!-- Better "web app" behavior on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#050505" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    :root {
+      --bg: #050505;
+      --panel: rgba(8, 12, 10, 0.9);
+      --panel-2: rgba(12, 18, 14, 0.95);
+      --border: rgba(0, 255, 136, 0.35);
+      --glow: #00ff99;
+      --glow-soft: rgba(0, 255, 153, 0.15);
+      --text: #d8ffe9;
+      --muted: #7debb7;
+      --danger: #ff7373;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(0,255,153,0.08), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(0,255,153,0.05), transparent 30%),
+        linear-gradient(135deg, #010101, #07110b 40%, #020202);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 560px; /* wider */
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 22px; /* shorter */
+      box-shadow:
+        0 0 0 1px rgba(0,255,153,0.06),
+        0 0 30px rgba(0,255,153,0.08),
+        inset 0 0 24px rgba(0,255,153,0.03);
+      backdrop-filter: blur(8px);
+    }
+
+    .header { text-align: center; margin-bottom: 14px; }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: var(--glow);
+      text-shadow: 0 0 12px rgba(0,255,153,0.3);
+      letter-spacing: 0.4px;
+      line-height: 1.2;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px; /* tighter */
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+
+    label { font-size: 0.82rem; color: var(--muted); }
+
+    .input-wrap { position: relative; }
+
+    .prefix, .suffix {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(216,255,233,0.65);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+    .prefix { left: 12px; }
+    .suffix { right: 12px; }
+
+    input {
+      width: 100%;
+      height: 42px; /* shorter */
+      border: 1px solid rgba(0,255,153,0.22);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0 12px;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    input.with-prefix { padding-left: 28px; }
+    input.with-suffix { padding-right: 28px; }
+
+    input:focus {
+      border-color: rgba(0,255,153,0.6);
+      box-shadow: 0 0 0 3px var(--glow-soft);
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .helper {
+      font-size: 0.7rem;
+      color: rgba(216,255,233,0.58);
+      margin-top: 1px;
+      line-height: 1.25;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,255,153,0.18);
+      background: rgba(0,255,153,0.04);
+      text-align: center;
+    }
+
+    .result .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result .value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--glow);
+      text-shadow: 0 0 14px rgba(0,255,153,0.2);
+      word-break: break-word;
+      line-height: 1.1;
+    }
+
+    .copy-btn {
+      flex: 0 0 auto;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(0,255,153,0.25);
+      border-radius: 9px;
+      background: rgba(0,255,153,0.08);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: rgba(0,255,153,0.14);
+      border-color: rgba(0,255,153,0.42);
+    }
+
+    .copy-btn:active { transform: translateY(1px); }
+
+    .result .sub {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: rgba(216,255,233,0.7);
+      line-height: 1.3;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button.action {
+      flex: 1;
+      height: 38px;
+      border: 1px solid rgba(0,255,153,0.25);
+      border-radius: 10px;
+      background: rgba(0,255,153,0.06);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button.action:hover {
+      background: rgba(0,255,153,0.12);
+      border-color: rgba(0,255,153,0.42);
+    }
+
+    button.action:active { transform: translateY(1px); }
+
+    .error {
+      color: var(--danger);
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.72rem;
+      min-height: 16px;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 12px; }
+      .calculator { max-width: 100%; padding: 16px; border-radius: 16px; }
+      .header h1 { font-size: 1.25rem; }
+      .result .value { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator">
+    <div class="header">
+      <h1>Position Size Calculator</h1>
+      <p>Calculate your true position size from risk, stop loss, and leverage.</p>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="risk">Risk Amount</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="text" id="risk" class="with-prefix" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="stopLoss">Stop Loss</label>
+        <div class="input-wrap">
+          <input type="text" id="stopLoss" class="with-suffix" inputmode="decimal" />
+          <span class="suffix">%</span>
+        </div>
+        <div class="helper">Enter as a normal percent (example: 5 = 5%)</div>
+      </div>
+
+      <div class="field">
+        <label for="leverage">Leverage</label>
+        <div class="input-wrap">
+          <input type="text" id="leverage" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="leveragedPosition">Leveraged Position Size</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="text" id="leveragedPosition" class="with-prefix" inputmode="decimal" />
+        </div>
+        <div class="helper">Editing this field recalculates your risk amount.</div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="label">Actual Position Size</div>
+
+      <div class="result-row">
+        <div class="value" id="positionSize">$0.00</div>
+        <button id="copyBtn" type="button" class="copy-btn">Copy</button>
+      </div>
+
+      <div class="sub" id="summaryText">Ready to calculate.</div>
+    </div>
+
+    <div class="actions">
+      <button id="resetBtn" class="action" type="button">Reset Defaults</button>
+      <button id="clearBtn" class="action" type="button">Clear</button>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+  </div>
+
+  <script>
+    const riskInput = document.getElementById('risk');
+    const stopInput = document.getElementById('stopLoss');
+    const leverageInput = document.getElementById('leverage');
+    const leveragedInput = document.getElementById('leveragedPosition');
+    const positionOutput = document.getElementById('positionSize');
+    const summaryText = document.getElementById('summaryText');
+    const errorMsg = document.getElementById('errorMsg');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Defaults (stopLoss is 5.00 = 5%)
+    const defaults = {
+      risk: '1,000.00',
+      stopLoss: '5.00',
+      leverage: '100',
+      leveragedPosition: '20,000.00'
+    };
+
+    function formatNumber(value, decimals = 2) {
+      if (!isFinite(value)) return '';
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function unformatNumber(value) {
+      if (typeof value !== 'string') value = String(value ?? '');
+      const cleaned = value.replace(/[^0-9.-]/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function loadValues() {
+      riskInput.value = localStorage.getItem('risk') || defaults.risk;
+      stopInput.value = localStorage.getItem('stopLoss') || defaults.stopLoss;
+      leverageInput.value = localStorage.getItem('leverage') || defaults.leverage;
+      leveragedInput.value = localStorage.getItem('leveragedPosition') || defaults.leveragedPosition;
+    }
+
+    function saveValues() {
+      localStorage.setItem('risk', riskInput.value);
+      localStorage.setItem('stopLoss', stopInput.value);
+      localStorage.setItem('leverage', leverageInput.value);
+      localStorage.setItem('leveragedPosition', leveragedInput.value);
+    }
+
+    function setError(message = '') {
+      errorMsg.textContent = message;
+    }
+
+    function calculate(changed = 'other') {
+      const risk = unformatNumber(riskInput.value);
+      const stopPercent = unformatNumber(stopInput.value);
+      const stopDecimal = stopPercent / 100;
+      const leverage = unformatNumber(leverageInput.value);
+      let leveragedPos = unformatNumber(leveragedInput.value);
+
+      setError('');
+
+      if (stopPercent <= 0) {
+        positionOutput.textContent = '$0.00';
+        summaryText.textContent = 'Enter a stop loss greater than 0%.';
+        setError('Stop loss must be greater than 0.');
+        saveValues();
+        return;
+      }
+
+      if (leverage <= 0) {
+        positionOutput.textContent = '$0.00';
+        summaryText.textContent = 'Enter leverage greater than 0.';
+        setError('Leverage must be greater than 0.');
+        saveValues();
+        return;
+      }
+
+      if (changed === 'leveraged') {
+        const finalPosition = leveragedPos / leverage;
+        const newRisk = leveragedPos * stopDecimal;
+
+        riskInput.value = formatNumber(newRisk);
+        positionOutput.textContent = `$${formatNumber(finalPosition)}`;
+        summaryText.textContent = `At ${formatNumber(leverage, 0)}x leverage and ${formatNumber(stopPercent)}% stop loss.`;
+      } else {
+        const calculatedLeveragedPos = risk / stopDecimal;
+        const finalPosition = calculatedLeveragedPos / leverage;
+
+        leveragedPos = calculatedLeveragedPos;
+        leveragedInput.value = formatNumber(leveragedPos);
+        positionOutput.textContent = `$${formatNumber(finalPosition)}`;
+        summaryText.textContent = `Using $${formatNumber(risk)} risk at ${formatNumber(stopPercent)}% stop loss.`;
+      }
+
+      saveValues();
+    }
+
+    function formatFieldOnBlur(input) {
+      const value = unformatNumber(input.value);
+      if (input.id === 'leverage') {
+        input.value = value ? formatNumber(value, value % 1 === 0 ? 0 : 2) : '';
+      } else {
+        input.value = value ? formatNumber(value) : '';
+      }
+    }
+
+    [riskInput, stopInput, leverageInput, leveragedInput].forEach(input => {
+      input.addEventListener('input', () => {
+        calculate(input.id === 'leveragedPosition' ? 'leveraged' : 'other');
+      });
+
+      input.addEventListener('blur', () => {
+        formatFieldOnBlur(input);
+        calculate(input.id === 'leveragedPosition' ? 'leveraged' : 'other');
+      });
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const rawValue = positionOutput.textContent.replace('$', '').trim();
+      try {
+        await navigator.clipboard.writeText(rawValue);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => (copyBtn.textContent = originalText), 1200);
+      } catch (err) {
+        setError('Could not copy to clipboard.');
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      riskInput.value = defaults.risk;
+      stopInput.value = defaults.stopLoss;
+      leverageInput.value = defaults.leverage;
+      leveragedInput.value = defaults.leveragedPosition;
+      calculate('other');
+    });
+
+    clearBtn.addEventListener('click', () => {
+      riskInput.value = '';
+      stopInput.value = '';
+      leverageInput.value = '';
+      leveragedInput.value = '';
+      positionOutput.textContent = '$0.00';
+      summaryText.textContent = 'Cleared. Enter new values to calculate.';
+      setError('');
+      saveValues();
+    });
+
+    // Initialize
+    loadValues();
+    calculate('other');
+  </script>
+</body>
+</html>
